@@ -1,0 +1,21 @@
+# 基础模型配置
+multi_models:
+  conversation_model:
+    api_key: "sk-fd424ac8b68d4e3fbe0dc9988ff4cc65"
+    base_url: "https://api.deepseek.com"
+    model_name: "deepseek-chat"
+  tool_call_model:
+    api_key: "sk-fd424ac8b68d4e3fbe0dc9988ff4cc65"
+    base_url: "https://api.deepseek.com"
+    model_name: "deepseek-chat"
+
+# 工具配置
+tools:
+  weather:
+    api_key: "e7621db27f653c5ee57acc1523a7f1a9"
+    endpoint: "https://restapi.amap.com/v3/weather/weatherInfo"
+  bocha:
+    api_key: "sk-e881f88ee4374918a5f068aa84ee1655"
+  delivery:
+    api_key: "87579cc5b11d45a6a3a5fd62a3886eb1"
+    endpoint: "https://kzexpress.market.alicloudapi.com/api-mall/api/express/query"
