@@ -6,6 +6,7 @@ from agentchat.settings import initialize_app_settings
 
 from api.core.database import Base, SessionLocal, engine
 from api.repositories import models as _  # noqa: F401 ensure models are registered
+from api.routers.agents import router as agents_router
 from api.routers.auth import router as auth_router
 from api.routers.conversations import router as conversations_router
 from api.routers.tools import router as tools_router
@@ -30,6 +31,7 @@ async def startup_event():
 
 
 app.include_router(auth_router)
+app.include_router(agents_router)
 app.include_router(conversations_router)
 app.include_router(tools_router)
 app.include_router(test_router)
