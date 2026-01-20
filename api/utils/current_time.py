@@ -3,6 +3,11 @@
 from datetime import datetime, timedelta, timezone
 
 
+def get_current_datetime() -> datetime:
+    """返回当前 UTC 时间（带时区信息），用于 JWT 等需要精确时间比较的场景。"""
+    return datetime.now(timezone.utc)
+
+
 def get_current_time_iso() -> str:
     """返回当前时间的 ISO 8601 字符串（UTC，含时区偏移）。"""
     return datetime.now(timezone.utc).isoformat()
@@ -15,3 +20,4 @@ def get_current_time_bj_iso() -> str:
 
 if __name__ == "__main__":
     print(get_current_time_bj_iso())
+    print(get_current_datetime)

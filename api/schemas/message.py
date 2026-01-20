@@ -3,7 +3,7 @@
 from datetime import datetime
 from typing import List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class MessageCreate(BaseModel):
@@ -19,14 +19,13 @@ class MessageResponse(BaseModel):
 
 
 class MessageListItem(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: str
     role: str
     content: str
     agent_mode: str
     created_at: Optional[datetime]
-
-    class Config:
-        orm_mode = True
 
 
 class MessagesPage(BaseModel):

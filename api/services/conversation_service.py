@@ -64,4 +64,4 @@ def list_messages(
     )
     total = query.count()
     items = query.offset(offset).limit(limit).all()
-    return MessagesPage(items=[MessageListItem.from_orm(item) for item in items], total=total)
+    return MessagesPage(items=[MessageListItem.model_validate(item) for item in items], total=total)

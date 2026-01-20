@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 
 from api.core.database import get_db
 from api.repositories.models import User, UserSession
+from api.utils.current_time import get_current_datetime
 
 SECRET_KEY = os.getenv("JWT_SECRET", "dev-secret-change-me")
 ALGORITHM = "HS256"
@@ -36,7 +37,7 @@ def get_password_hash(password: str) -> str:
 
 def create_access_token(user_id: str) -> Tuple[str, datetime]:
     """生成短期有效的 JWT（使用 UTC，带时区），返回 token 与过期时间。"""
-    now = datetime.now(timezone.utc)
+    now = get_current_datetime()
     expires_at = now + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     payload = {"sub": user_id, "exp": expires_at}
     token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
@@ -62,8 +63,21 @@ def get_current_user(
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id = payload.get("sub")
-    except jwt.PyJWTError:
+        if not user_id:
+            print(f"=== DEBUG: JWT decoded but 'sub' field is missing. Payload: {payload}")
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token: missing user_id in payload. Please login again.")
+    except jwt.PyJWTError as e:
+        print(f"=== DEBUG: JWT decode error: {e}")
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+
+    # Debug: 检查数据库中的所有session
+    all_sessions = db.query(UserSession).all()
+    print(f"=== DEBUG: Total sessions in DB: {len(all_sessions)}")
+    for s in all_sessions:
+        print(f"  - Session ID: {s.id}, User ID: {s.user_id}, Token: {s.access_token[:50]}..., Revoked: {s.revoked_at}")
+
+    print(f"=== DEBUG: Looking for token: {token[:50]}...")
+    print(f"=== DEBUG: Looking for user_id: {user_id}")
 
     session = (
         db.query(UserSession)
@@ -74,12 +88,28 @@ def get_current_user(
         )
         .first()
     )
+
     if not session:
+        print(f"=== DEBUG: Session NOT FOUND!")
+        print(f"=== DEBUG: Checking by token only...")
+        session_by_token = db.query(UserSession).filter(UserSession.access_token == token).first()
+        if session_by_token:
+            print(f"=== DEBUG: Found by token! user_id={session_by_token.user_id}, revoked_at={session_by_token.revoked_at}")
+        else:
+            print(f"=== DEBUG: Not found by token either!")
+
+        print(f"=== DEBUG: Checking by user_id only...")
+        sessions_by_user = db.query(UserSession).filter(UserSession.user_id == user_id).all()
+        print(f"=== DEBUG: Found {len(sessions_by_user)} sessions for user_id")
+        for s in sessions_by_user:
+            print(f"  - Token matches: {s.access_token == token}")
+
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token expired or revoked")
 
-    now_utc = datetime.now(timezone.utc)
+    now_utc = get_current_datetime()
     session_exp = _normalize_dt(session.expires_at)
     if session_exp < now_utc:
+        print(session_exp, now_utc)
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token expired or revoked")
 
     user = db.query(User).filter(User.id == user_id, User.is_active.is_(True)).first()

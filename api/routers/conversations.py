@@ -45,14 +45,15 @@ def list_conversations_endpoint(
     return list_conversations(db=db, user=current_user)
 
 
-@router.delete("/{conversation_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{conversation_id}")
 def delete_conversation_endpoint(
     conversation_id: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """删除指定对话（级联删除消息）。"""
-    return delete_conversation(db=db, user=current_user, conversation_id=conversation_id)
+    delete_conversation(db=db, user=current_user, conversation_id=conversation_id)
+    return {"message": "delete ok", "conversation_id": conversation_id}
 
 
 @router.get("/{conversation_id}/messages", response_model=MessagesPage)
