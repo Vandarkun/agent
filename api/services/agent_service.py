@@ -5,15 +5,15 @@ from api.schemas import AgentInfo
 
 # Agent 配置信息
 AGENTS_CONFIG = {
-    "react": {
-        "name": "ReAct 智能体",
+    "ReAct": {
+        "name": "ReAct智能体",
         "description": "基于 ReAct 范式的基础智能体，实现'推理-行动-观察'循环。适合简单任务和快速响应场景。",
     },
-    "plan_execute": {
+    "PlanExecute": {
         "name": "规划-执行智能体",
         "description": "先规划后执行的智能体，适合复杂任务处理。支持多步骤操作和精细控制。",
     },
-    "codeact": {
+    "CodeAct": {
         "name": "代码执行智能体",
         "description": "通过生成和执行 Python 代码来解决问题。适合数据分析、计算任务和编程场景。",
     },

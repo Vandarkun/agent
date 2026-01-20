@@ -1,6 +1,7 @@
 """FastAPI 入口：加载配置、初始化表结构并挂载路由。"""
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from agentchat.settings import initialize_app_settings
 
@@ -15,6 +16,15 @@ from api.services.auth_service import ensure_default_user
 
 
 app = FastAPI(title="WDK Agent API")
+
+# 配置 CORS 中间件
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # 允许所有来源（开发环境）
+    allow_credentials=True,  # 允许携带 Cookie
+    allow_methods=["*"],  # 允许所有 HTTP 方法
+    allow_headers=["*"],  # 允许所有请求头
+)
 
 
 @app.on_event("startup")
