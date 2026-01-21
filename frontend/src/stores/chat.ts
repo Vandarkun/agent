@@ -8,7 +8,7 @@ export const useChatStore = defineStore('chat', () => {
   const conversations = ref<Conversation[]>([])
   const currentConversationId = ref<string | null>(null)
   const messages = ref<Record<string, Message[]>>({})
-  const currentAgent = ref<string>('ReAct') // 默认 Agent
+  const currentAgent = ref<string>('react') // 默认 Agent
   const isLoading = ref(false)
   const error = ref<string | null>(null)
 
@@ -88,37 +88,51 @@ export const useChatStore = defineStore('chat', () => {
     try {
       isLoading.value = true
       error.value = null
-      const response = await conversationApi.sendMessage(currentConversationId.value, {
-        content,
-        agent_mode: currentAgent.value
-      })
+      const conversationId = currentConversationId.value
+      const now = new Date().toISOString()
 
-      // 添加用户消息
       const userMsg: Message = {
-        id: response.message_id,
-        conversation_id: response.conversation_id,
+        id: createLocalId('user'),
+        conversation_id: conversationId,
         role: 'user',
         content: content,
-        agent_mode: response.agent_mode,
-        created_at: new Date().toISOString()
+        agent_mode: currentAgent.value,
+        created_at: now
       }
 
-      // 添加 Agent 回复
       const agentMsg: Message = {
-        id: `${response.message_id}_response`,
-        conversation_id: response.conversation_id,
+        id: createLocalId('agent'),
+        conversation_id: conversationId,
         role: 'agent',
-        content: response.answer,
-        agent_mode: response.agent_mode,
-        created_at: new Date().toISOString()
+        content: '',
+        agent_mode: currentAgent.value,
+        created_at: now
       }
 
-      const msgs = messages.value[currentConversationId.value] || []
-      messages.value[currentConversationId.value] = [...msgs, userMsg, agentMsg]
+      const msgs = messages.value[conversationId] || []
+      const nextMessages = [...msgs, userMsg, agentMsg]
+      messages.value[conversationId] = nextMessages
+      const agentIndex = nextMessages.length - 1
 
-      return response
+      await conversationApi.sendMessageStream(conversationId, {
+        content,
+        agent_mode: currentAgent.value
+      }, (chunk) => {
+        const target = messages.value[conversationId]?.[agentIndex]
+        if (target) {
+          target.content += chunk
+        }
+      })
     } catch (err: any) {
-      error.value = err.response?.data?.detail || '发送消息失败'
+      const detail = err?.message || err.response?.data?.detail || '发送消息失败'
+      error.value = detail
+      if (currentConversationId.value) {
+        const msgs = messages.value[currentConversationId.value]
+        const target = msgs?.[msgs.length - 1]
+        if (target && !target.content) {
+          target.content = detail
+        }
+      }
       throw err
     } finally {
       isLoading.value = false
@@ -134,6 +148,13 @@ export const useChatStore = defineStore('chat', () => {
 
   function setCurrentAgent(mode: string) {
     currentAgent.value = mode
+  }
+
+  function createLocalId(prefix: string) {
+    if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
+      return `${prefix}-${crypto.randomUUID()}`
+    }
+    return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`
   }
 
   return {

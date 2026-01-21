@@ -16,7 +16,6 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
 import { useAgentStore } from '@/stores/agent'
 import dayjs from 'dayjs'
 import type { Message } from '@/types'
@@ -27,8 +26,19 @@ const props = defineProps<{
 
 const agentStore = useAgentStore()
 
+function normalizeAgentMode(mode: string | undefined) {
+  if (!mode) {
+    return ''
+  }
+  const normalized = mode.trim().toLowerCase()
+  if (normalized === 'planexecute') {
+    return 'plan_execute'
+  }
+  return normalized
+}
+
 function getAgentName(mode: string) {
-  const agent = agentStore.getAgentByMode(mode)
+  const agent = agentStore.getAgentByMode(normalizeAgentMode(mode))
   return agent?.name || 'Agent'
 }
 

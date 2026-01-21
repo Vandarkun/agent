@@ -303,7 +303,7 @@ class ReactAgent:
 
         initial_state = {"messages": prepared_messages, "tool_call_count": 0, "model_call_count": 0}
         try:
-            async for typ, token in self.graph.astream(input=initial_state, stream_mode="messages"):
+            async for typ, token in self.graph.astream(input=initial_state, stream_mode=["messages"]):
                 if typ == "messages":
                     message = token[0]
                     if isinstance(message, AIMessageChunk) and message.content:
