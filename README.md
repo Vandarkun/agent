@@ -5,7 +5,7 @@
 
 ## 特性
 
-- 多种 Agent 模式：ReAct / Plan-Execute / CodeAct / MCP
+- 多种 Agent 模式：ReAct / Plan-Execute / CodeAct
 - 统一会话与消息管理（创建、删除、切换）
 - 工具调用与 MCP 工具接入
 - 流式输出（前端逐段展示生成回复）
